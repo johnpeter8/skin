@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+
+    "users": {
+      ".indexOn": ["username"]
+    },
+
+    "doctors": {
+      ".indexOn": ["username", "active"]
+    }
+  }
+}
