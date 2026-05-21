@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Providence - TV Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary-blue: #1e88e5;
+            --accent-cyan: #00f2ff;
+            --bg-dark: #0a1929;
+            --bg-card: #132f4c;
+            --text-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #1a237e 100%);
+            margin: 0; padding: 0; height: 100vh; overflow: hidden; color: var(--text-white);
+        }
+
+        .tv-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh; padding: 15px; gap: 15px;
+        }
+
+        .header {
+            background: rgba(19, 47, 76, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 15px 30px;
+            display: flex; align-items: center; justify-content: center;
+            gap: 25px; border: 2px solid rgba(30, 136, 229, 0.3);
+        }
+
+        .logo-container { width: 80px; height: 80px; }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0, 242, 255, 0.5)); }
+
+        .hospital-name h1 {
+            font-size: 3.5rem; font-weight: 900; letter-spacing: 12px;
+            background: linear-gradient(90deg, var(--text-white), var(--accent-cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .clock {
+            font-size: 2rem; font-weight: 700; color: var(--accent-cyan);
+            letter-spacing: 3px;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 15px; overflow-y: auto;
+        }
+
+        .doctor-panel {
+            background: rgba(19, 47, 76, 0.6);
+            backdrop-filter: blur(15px);
+            border-radius: 24px; padding: 20px;
+            border: 2px solid rgba(30, 136, 229, 0.3);
+            display: flex; flex-direction: column; gap: 15px;
+            min-height: 500px;
+        }
+
+        .doctor-title {
+            text-align: center; font-size: 1.8rem; font-weight: 800;
+            letter-spacing: 2px; padding: 15px;
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.3), rgba(0, 242, 255, 0.2));
+            border-radius: 12px; border-bottom: 3px solid var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        .current-section {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.15), rgba(30, 136, 229, 0.15));
+            border: 3px solid var(--accent-cyan); border-radius: 20px;
+            padding: 30px; text-align: center; position: relative; overflow: hidden;
+        }
+
+        .current-section::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.1) 0%, transparent 70%);
+            animation: rotateGlow 8s linear infinite;
+        }
+
+        @keyframes rotateGlow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .current-label {
+            font-size: 1.2rem; color: var(--accent-cyan); font-weight: 700;
+            letter-spacing: 2px; margin-bottom: 15px; position: relative; z-index: 2;
+        }
+
+        .current-number {
+            font-size: 6rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1; position: relative; z-index: 2;
+            animation: numberZoomIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes numberZoomIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .current-name {
+            font-size: 1.8rem; font-weight: 700; color: var(--text-white);
+            margin-top: 15px; position: relative; z-index: 2;
+        }
+
+        .empty-current { color: rgba(255, 255, 255, 0.4); font-size: 1.5rem; }
+
+        .waiting-section { flex: 1; overflow-y: auto; }
+
+        .waiting-title {
+            font-size: 1rem; font-weight: 700; color: var(--accent-cyan);
+            letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 8px;
+            border-bottom: 2px solid rgba(0, 242, 255, 0.3); text-transform: uppercase;
+        }
+
+        .patient-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 15px; margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05); border-radius: 12px;
+            border-left: 3px solid var(--accent-cyan); transition: all 0.3s;
+        }
+        .patient-row:hover { background: rgba(0, 242, 255, 0.1); transform: translateX(5px); }
+
+        .patient-name { font-size: 1.2rem; font-weight: 600; }
+        .patient-id { font-size: 1.5rem; font-weight: 900; color: var(--accent-cyan); }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: rgba(255, 255, 255, 0.3); font-size: 1rem; }
+
+        .waiting-section::-webkit-scrollbar { width: 6px; }
+        .waiting-section::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .waiting-section::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.3); border-radius: 10px; }
+
+        .doctors-grid::-webkit-scrollbar { height: 8px; }
+        .doctors-grid::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        .doctors-grid::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.3); border-radius: 10px; }
+
+        @media (max-width: 768px) {
+            .hospital-name h1 { font-size: 2rem; letter-spacing: 5px; }
+            .current-number { font-size: 4rem; }
+            .clock { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="la-providence-logo.png" alt="Logo" onerror="this.style.display='none'">
+            </div>
+            <div class="hospital-name">
+                <h1>POLYCLINIQUE MEDICALE LA PROVIDENCE</h1>
+            </div>
+            <div class="clock" id="clock">00:00</div>
+            <div class="logo-container">
+                <img src="la-providence-logo.png" alt="Logo" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <div class="doctors-grid" id="doctorsGrid"></div>
+    </div>
+
+    <audio id="ding" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuNz2dvLH3NgwzQys9__0sTN0L1kbomFY",
+            authDomain: "providence-e77b1.firebaseapp.com",
+            databaseURL: "https://providence-e77b1-default-rtdb.firebaseio.com",
+            projectId: "providence-e77b1",
+            storageBucket: "providence-e77b1.firebasestorage.app",
+            messagingSenderId: "1042528351641",
+            appId: "1:1042528351641:web:2b1b1231e4341ccf73cf08"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const ding = document.getElementById('ding');
+
+        let lastIds = {};
+        let activeDoctors = [];
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = 
+                now.toLocaleTimeString('rw-RW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function loadActiveDoctors() {
+            db.ref('settings/activeDoctors').on('value', (snapshot) => {
+                activeDoctors = snapshot.val() || [];
+                renderDoctorPanels();
+            });
+        }
+
+        function renderDoctorPanels() {
+            const grid = document.getElementById('doctorsGrid');
+
+            if (activeDoctors.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 100px 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">🏥</div>
+                        <div style="font-size: 1.5rem; color: rgba(255,255,255,0.4);">
+                            Nta muganga uri active ubu.<br>
+                            Kanda Admin panel kugirango wongere abaganga.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            db.ref('doctors').once('value').then(snapshot => {
+                const doctors = snapshot.val() || {};
+                grid.innerHTML = '';
+
+                activeDoctors.forEach(drId => {
+                    if (doctors[drId] && doctors[drId].active) {
+                        createDoctorPanel(drId, doctors[drId]);
+                    }
+                });
+            });
+        }
+
+        function createDoctorPanel(drId, doctor) {
+            const grid = document.getElementById('doctorsGrid');
+
+            const panel = document.createElement('div');
+            panel.className = 'doctor-panel';
+            panel.id = `panel-${drId}`;
+            panel.innerHTML = `
+                <div class="doctor-title">${doctor.name}</div>
+                <div class="current-section" id="current-${drId}">
+                    <div class="current-label">BINJIRE / ENTER</div>
+                    <div class="current-number" id="currNum-${drId}">--</div>
+                    <div class="current-name" id="currName-${drId}">
+                        <span class="empty-current">TEGEREZA...</span>
+                    </div>
+                </div>
+                <div class="waiting-section">
+                    <div class="waiting-title">⏳ ABATEGEREJE</div>
+                    <div id="waiting-${drId}"></div>
+                </div>
+            `;
+
+            grid.appendChild(panel);
+            listenToDoctorQueue(drId);
+        }
+
+        function listenToDoctorQueue(drId) {
+            db.ref(`doctors/${drId}/queue`).on('value', (snapshot) => {
+                const queue = snapshot.val() || {};
+                const current = queue.c || null;
+                const pending = queue.p || [];
+
+                const currNum = document.getElementById(`currNum-${drId}`);
+                const currName = document.getElementById(`currName-${drId}`);
+
+                if (current) {
+                    currNum.textContent = current.id;
+                    currName.innerHTML = current.name;
+
+                    if (lastIds[drId] !== current.id) {
+                        ding.play().catch(() => console.log("Click to enable audio"));
+                        lastIds[drId] = current.id;
+                    }
+                } else {
+                    currNum.textContent = "--";
+                    currName.innerHTML = '<span class="empty-current">TEGEREZA...</span>';
+                }
+
+                const waitingDiv = document.getElementById(`waiting-${drId}`);
+                if (pending.length > 0) {
+                    waitingDiv.innerHTML = pending.slice(0, 8).map(p => `
+                        <div class="patient-row">
+                            <span class="patient-name">${p.name}</span>
+                            <span class="patient-id">${p.id}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    waitingDiv.innerHTML = '<div class="empty-state">Nta muntu uri ku murongo</div>';
+                }
+            });
+        }
+
+        window.onclick = () => {
+            ding.play().then(() => { ding.pause(); console.log("Audio Enabled!"); });
+        };
+
+        loadActiveDoctors();
+    </script>
+</body>
+</html>

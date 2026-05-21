@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Providence - Main Menu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+            color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+
+        body::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 242, 255, 0.08), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(30, 136, 229, 0.08), transparent 50%);
+            pointer-events: none;
+        }
+
+        .header { text-align: center; margin-bottom: 50px; position: relative; z-index: 1; }
+        .header h1 { font-size: 3.5rem; letter-spacing: 8px; font-weight: 900; }
+        .header h1 span { color: #00f2ff; }
+        .header p { color: rgba(255,255,255,0.5); margin-top: 10px; letter-spacing: 3px; font-size: 1rem; }
+
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(2, 280px);
+            gap: 25px; position: relative; z-index: 1;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 45px 30px; border-radius: 20px;
+            text-align: center; cursor: pointer; transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none; color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-card:hover {
+            border-color: #00f2ff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 242, 255, 0.15);
+        }
+
+        .menu-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .menu-card h3 { margin: 0 0 8px 0; font-size: 1.3rem; letter-spacing: 2px; }
+        .menu-card p { margin: 0; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+        .footer {
+            position: fixed; bottom: 20px;
+            color: rgba(255,255,255,0.3); font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 650px) {
+            .menu-grid { grid-template-columns: 1fr; width: 90%; max-width: 300px; }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LA <span>PROVIDENCE</span></h1>
+        <p>HOSPITAL MANAGEMENT SYSTEM</p>
+    </div>
+
+    <div class="menu-grid">
+        <a href="reception.html" class="menu-card">
+            <span class="icon">📝</span>
+            <h3>RECEPTION</h3>
+            <p>Kwiyandikisha</p>
+        </a>
+        <a href="doctor.html" class="menu-card">
+            <span class="icon">👨‍⚕️</span>
+            <h3>DOCTOR</h3>
+            <p>Guhamagara</p>
+        </a>
+        <a href="tv.html" class="menu-card">
+            <span class="icon">📺</span>
+            <h3>TV DISPLAY</h3>
+            <p>Hanze kuri TV</p>
+        </a>
+        <a href="admin.html" class="menu-card">
+            <span class="icon">⚙️</span>
+            <h3>ADMIN</h3>
+            <p>Genzura Sisitemu</p>
+        </a>
+    </div>
+
+    <div class="footer">© 2026 La Providence - Multi-Doctor Queue System</div>
+</body>
+</html>

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+    <meta charset="UTF-8">
+    <title>La Providence - Admin Dashboard</title>
+    <style>
+        :root {
+            --bg: #f8fafc; --card: #ffffff;
+            --primary: #1e293b; --accent: #38bdf8;
+            --danger: #ef4444; --success: #22c55e;
+            --warning: #f59e0b; --purple: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg);
+            margin: 0; padding: 0; color: var(--primary);
+        }
+
+        /* LOGIN OVERLAY */
+        .login-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+            padding: 40px; width: 400px; max-width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .login-box h2 {
+            color: white; text-align: center; margin-bottom: 25px;
+            font-size: 1.8rem; letter-spacing: 3px;
+        }
+
+        .login-box h2 span { color: var(--accent); }
+
+        .login-box input {
+            width: 100%; padding: 14px; margin-bottom: 15px;
+            background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: white; font-size: 1rem; outline: none;
+        }
+
+        .login-box input:focus { border-color: var(--accent); }
+
+        .login-box input::placeholder { color: rgba(255,255,255,0.3); }
+
+        .login-box button {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--accent), #1e88e5);
+            border: none; border-radius: 12px; color: #0f172a;
+            font-size: 1rem; font-weight: 800; cursor: pointer;
+        }
+
+        .login-error {
+            color: #f43f5e; text-align: center; margin-top: 10px;
+            font-size: 0.9rem; display: none;
+        }
+
+        /* MAIN APP */
+        .app { display: none; }
+
+        .topbar {
+            background: var(--primary); color: white; padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .topbar .brand { font-weight: 900; letter-spacing: 3px; font-size: 1.3rem; }
+        .topbar .brand span { color: var(--accent); }
+
+        .topbar .user-info {
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .topbar .user-info span {
+            background: rgba(255,255,255,0.1); padding: 8px 16px;
+            border-radius: 8px; font-size: 0.85rem;
+        }
+
+        .btn-logout {
+            background: var(--danger); color: white; border: none;
+            padding: 8px 20px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.85rem;
+        }
+
+        .container { padding: 25px; max-width: 1400px; margin: 0 auto; }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card); padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .stat-card h3 { margin: 0; color: #64748b; font-size: 0.9rem; text-transform: uppercase; }
+        .stat-card .value { font-size: 2.5rem; font-weight: 800; margin: 10px 0; }
+
+        .section {
+            background: white; padding: 30px; border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 20px; color: var(--primary);
+            border-bottom: 3px solid var(--accent); padding-bottom: 10px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* DOCTOR CARDS */
+        .doctor-card {
+            background: #f8fafc; padding: 20px; border-radius: 12px;
+            margin-bottom: 15px; display: flex;
+            justify-content: space-between; align-items: center;
+            border-left: 4px solid var(--accent); transition: 0.3s;
+        }
+
+        .doctor-card:hover {
+            transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .doctor-info h3 { margin: 0 0 8px 0; font-size: 1.2rem; }
+        .doctor-info .credentials {
+            font-size: 0.8rem; color: #64748b; margin-bottom: 8px;
+            background: #e2e8f0; padding: 4px 10px; border-radius: 6px;
+            display: inline-block;
+        }
+
+        .doctor-stats {
+            display: flex; gap: 15px; font-size: 0.85rem; color: #64748b;
+        }
+
+        .stat-item { display: flex; align-items: center; gap: 5px; }
+
+        .badge {
+            padding: 4px 12px; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+        }
+
+        .badge-active { background: #dcfce7; color: #16a34a; }
+        .badge-inactive { background: #fee2e2; color: #dc2626; }
+        .badge-visible { background: #dbeafe; color: #1e40af; }
+
+        .doctor-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.85rem;
+        }
+
+        .btn-toggle { background: var(--warning); color: white; }
+        .btn-toggle:hover { background: #d97706; }
+        .btn-visibility { background: var(--accent); color: white; }
+        .btn-visibility:hover { background: #0284c7; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-purple { background: var(--purple); color: white; }
+        .btn-purple:hover { background: #9333ea; }
+
+        /* ADD DOCTOR FORM */
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-group label {
+            display: block; margin-bottom: 8px;
+            font-weight: 600; color: var(--primary); font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 1rem; box-sizing: border-box; outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+        .add-doctor-form {
+            background: #f0f9ff; padding: 25px;
+            border-radius: 12px; border: 2px dashed var(--accent);
+        }
+
+        .add-doctor-form h3 { margin-bottom: 20px; color: var(--primary); }
+
+        /* RECEPTION USER */
+        .reception-card {
+            background: #fef3c7; padding: 20px; border-radius: 12px;
+            border-left: 4px solid var(--warning); margin-bottom: 15px;
+        }
+
+        .log-section {
+            margin-top: 20px; background: #1e293b; color: #10b981;
+            padding: 20px; border-radius: 10px; font-family: monospace;
+            height: 200px; overflow-y: auto; font-size: 0.85rem;
+        }
+
+        /* TABS */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+        .tab {
+            padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent;
+            font-weight: 600; color: #64748b; transition: 0.2s;
+        }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab:hover { color: var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .doctor-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .doctor-controls { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN OVERLAY -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>ADMIN <span>LOGIN</span></h2>
+            <input type="text" id="loginUser" placeholder="Username">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button onclick="doLogin()">INJIRA</button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app" id="mainApp">
+        <div class="topbar">
+            <div class="brand">LA <span>PROVIDENCE</span></div>
+            <div class="user-info">
+                <span>👤 <span id="adminName">Admin</span></span>
+                <span style="background: var(--success); color: white;">ADMIN</span>
+                <button class="btn-logout" onclick="logout()">SOHOKA</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- STATS -->
+            <div class="grid">
+                <div class="stat-card">
+                    <h3>Total Patients</h3>
+                    <div class="value" id="totalPatients">0</div>
+                </div>
+                <div class="stat-card" style="border-bottom-color: var(--success)">
+                    <h3>Active Doctors</h3>
+                    <div class="value" id="activeDoctors">0</div>
+                </div>
+                <div class="stat-card" style="border-bottom-color: var(--warning)">
+                    <h3>Visible on TV</h3>
+                    <div class="value" id="visibleDoctors">0</div>
+                </div>
+                <div class="stat-card" style="border-bottom-color: var(--purple)">
+                    <h3>Total Doctors</h3>
+                    <div class="value" id="totalDoctors">0</div>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('doctors')">👨‍⚕️ ABAGANGA</div>
+                <div class="tab" onclick="switchTab('add')">➕ SHIRA MUGANGA</div>
+                <div class="tab" onclick="switchTab('reception')">📝 RECEPTION</div>
+                <div class="tab" onclick="switchTab('system')">⚙️ SYSTEM</div>
+            </div>
+
+            <!-- TAB: DOCTORS LIST -->
+            <div class="tab-content active" id="tab-doctors">
+                <div class="section">
+                    <h2>👨‍⚕️ DOCTOR MANAGEMENT</h2>
+                    <div id="doctorList"></div>
+                </div>
+            </div>
+
+            <!-- TAB: ADD DOCTOR -->
+            <div class="tab-content" id="tab-add">
+                <div class="section">
+                    <div class="add-doctor-form">
+                        <h3>➕ SHIRA MUGANGA MUSHYA / ADD NEW DOCTOR</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Amazina y'umuganga / Doctor Name</label>
+                                <input type="text" id="newDrName" placeholder="Dr. John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Username (kwinjira)</label>
+                                <input type="text" id="newDrUsername" placeholder="dr.john">
+                            </div>
+                            <div class="form-group">
+                                <label>Password (kwinjira)</label>
+                                <input type="text" id="newDrPassword" placeholder="password">
+                            </div>
+                            <div class="form-group">
+                                <label>Akarere / Specialty (optional)</label>
+                                <input type="text" id="newDrSpecialty" placeholder="General Medicine">
+                            </div>
+                            <div class="form-group full">
+                                <button class="btn btn-success" onclick="addNewDoctor()" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    ➕ SHIRA MUGANGA / ADD DOCTOR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: RECEPTION -->
+            <div class="tab-content" id="tab-reception">
+                <div class="section">
+                    <h2>📝 RECEPTION USER</h2>
+                    <div id="receptionCard"></div>
+                    <div class="add-doctor-form" style="margin-top: 20px;">
+                        <h3>📝 HINDURA RECEPTION / UPDATE RECEPTION</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="recUsername" placeholder="reception">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" id="recPassword" placeholder="password">
+                            </div>
+                            <div class="form-group">
+                                <label>Amazina / Name</label>
+                                <input type="text" id="recName" placeholder="Receptionist Name">
+                            </div>
+                            <div class="form-group full">
+                                <button class="btn btn-purple" onclick="updateReception()" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    💾 BIKA RECEPTION / SAVE
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SYSTEM -->
+            <div class="tab-content" id="tab-system">
+                <div class="section">
+                    <h2>⚙️ SYSTEM CONTROLS</h2>
+                    <p style="color: #64748b; margin-bottom: 20px;">
+                        Gukanda iyi buto birasiba amakuru yose y'uyu munsi. Bikore gusa iyo akazi karangiye.
+                    </p>
+                    <button class="btn btn-danger" onclick="resetAllQueues()" style="padding: 15px 30px; font-size: 1rem;">
+                        🗑️ RESET ALL QUEUES (CLEAR ALL DATA)
+                    </button>
+                </div>
+
+                <div class="section">
+                    <h2>🔐 ADMIN CREDENTIALS</h2>
+                    <div class="add-doctor-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="adminUsername" placeholder="admin">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" id="adminPassword" placeholder="password">
+                            </div>
+                            <div class="form-group">
+                                <label>Amazina / Name</label>
+                                <input type="text" id="adminNameInput" placeholder="Admin Name">
+                            </div>
+                            <div class="form-group full">
+                                <button class="btn btn-success" onclick="updateAdmin()" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    💾 BIKA ADMIN / SAVE ADMIN
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVITY LOG -->
+            <div class="log-section" id="adminLog">
+                > System Initialized...<br>
+                > Admin Panel Active<br>
+                > Waiting for updates...
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuNz2dvLH3NgwzQys9__0sTN0L1kbomFY",
+            authDomain: "providence-e77b1.firebaseapp.com",
+            databaseURL: "https://providence-e77b1-default-rtdb.firebaseio.com",
+            projectId: "providence-e77b1",
+            storageBucket: "providence-e77b1.firebasestorage.app",
+            messagingSenderId: "1042528351641",
+            appId: "1:1042528351641:web:2b1b1231e4341ccf73cf08",
+            measurementId: "G-NP7QFCTSBK"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let doctors = {};
+        let activeDoctorsList = [];
+        let currentAdmin = null;
+
+        // ========== AUTH ==========
+        function checkAuth() {
+            const session = JSON.parse(localStorage.getItem('providence_session') || 'null');
+            if (!session || session.role !== 'admin') {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+                return false;
+            }
+            currentAdmin = session;
+            document.getElementById('adminName').textContent = session.name || 'Admin';
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            return true;
+        }
+
+        async function doLogin() {
+            const user = document.getElementById('loginUser').value.trim().toLowerCase();
+            const pass = document.getElementById('loginPass').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!user || !pass) {
+                errorDiv.textContent = 'Injiza username na password!';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const snap = await db.ref('users/admin').once('value');
+                const admin = snap.val();
+
+                if (admin && admin.username === user && admin.password === pass) {
+                    const session = { role: 'admin', username: user, name: admin.name, loginTime: Date.now() };
+                    localStorage.setItem('providence_session', JSON.stringify(session));
+                    checkAuth();
+                    loadDoctors();
+                    addLog('Admin logged in: ' + user);
+                } else {
+                    errorDiv.textContent = 'Username cyangwa password siyo!';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Ikosa: ' + err.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('providence_session');
+            window.location.reload();
+        }
+
+        // ========== TABS ==========
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        // ========== DOCTORS ==========
+        function loadDoctors() {
+            if (!checkAuth()) return;
+
+            db.ref('doctors').on('value', (snapshot) => {
+                doctors = snapshot.val() || {};
+                displayDoctors();
+                updateStats();
+            });
+
+            db.ref('settings/activeDoctors').on('value', (snapshot) => {
+                activeDoctorsList = snapshot.val() || [];
+                displayDoctors();
+            });
+
+            // Load reception data
+            db.ref('users/reception').on('value', (snap) => {
+                const rec = snap.val() || {};
+                document.getElementById('recUsername').value = rec.username || '';
+                document.getElementById('recPassword').value = rec.password || '';
+                document.getElementById('recName').value = rec.name || '';
+                displayReception(rec);
+            });
+
+            // Load admin data
+            db.ref('users/admin').on('value', (snap) => {
+                const admin = snap.val() || {};
+                document.getElementById('adminUsername').value = admin.username || '';
+                document.getElementById('adminPassword').value = admin.password || '';
+                document.getElementById('adminNameInput').value = admin.name || '';
+            });
+        }
+
+        function displayDoctors() {
+            const container = document.getElementById('doctorList');
+            container.innerHTML = '';
+
+            if (Object.keys(doctors).length === 0) {
+                container.innerHTML = `
+                    <p style="text-align: center; color: #64748b; padding: 40px;">
+                        Nta muganga uri mu sisitemu. Kanda "Shira Muganga" kugirango wongere.
+                    </p>`;
+                return;
+            }
+
+            Object.keys(doctors).forEach(drId => {
+                const dr = doctors[drId];
+                const queue = dr.queue || {};
+                const pending = (queue.p || []).length;
+                const current = queue.c ? 1 : 0;
+                const lab = (queue.l || []).length;
+                const missed = (queue.m || []).length;
+                const total = pending + current + lab + missed;
+                const isVisible = activeDoctorsList.includes(drId);
+
+                const card = document.createElement('div');
+                card.className = 'doctor-card';
+                card.innerHTML = `
+                    <div class="doctor-info">
+                        <h3>${dr.name}</h3>
+                        <div class="credentials">
+                            👤 ${dr.username || 'N/A'} | 🔑 ${dr.password || 'N/A'}
+                            ${dr.specialty ? '| 🏥 ' + dr.specialty : ''}
+                        </div>
+                        <div class="doctor-stats">
+                            <div class="stat-item"><span>⏳ Pending:</span> <strong>${pending}</strong></div>
+                            <div class="stat-item"><span>👤 Current:</span> <strong>${current}</strong></div>
+                            <div class="stat-item"><span>🧪 Lab:</span> <strong>${lab}</strong></div>
+                            <div class="stat-item"><span>🚫 Missed:</span> <strong>${missed}</strong></div>
+                            <div class="stat-item"><span>📊 Total:</span> <strong>${total}</strong></div>
+                        </div>
+                    </div>
+                    <div class="doctor-controls">
+                        <span class="badge ${dr.active ? 'badge-active' : 'badge-inactive'}">
+                            ${dr.active ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
+                        ${dr.active ? `
+                            <span class="badge ${isVisible ? 'badge-visible' : 'badge-inactive'}">
+                                ${isVisible ? 'ON TV' : 'HIDDEN'}
+                            </span>
+                        ` : ''}
+                        <button class="btn btn-toggle" onclick="toggleDoctorActive('${drId}')">
+                            ${dr.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        ${dr.active ? `
+                            <button class="btn btn-visibility" onclick="toggleTVVisibility('${drId}')">
+                                ${isVisible ? 'Hide from TV' : 'Show on TV'}
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-danger" onclick="deleteDoctor('${drId}')">Delete</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function displayReception(rec) {
+            const container = document.getElementById('receptionCard');
+            if (!rec || !rec.username) {
+                container.innerHTML = `<p style="color: #64748b;">Nta reception user ishyizweho.</p>`;
+                return;
+            }
+            container.innerHTML = `
+                <div class="reception-card">
+                    <h4 style="margin-bottom: 10px;">📝 RECEPTION USER</h4>
+                    <p><strong>Amazina:</strong> ${rec.name || 'N/A'}</p>
+                    <p><strong>Username:</strong> ${rec.username}</p>
+                    <p><strong>Password:</strong> ${rec.password}</p>
+                </div>
+            `;
+        }
+
+        // ========== ACTIONS ==========
+        function toggleDoctorActive(drId) {
+            const dr = doctors[drId];
+            const newStatus = !dr.active;
+            db.ref(`doctors/${drId}/active`).set(newStatus);
+            if (!newStatus) {
+                const filtered = activeDoctorsList.filter(id => id !== drId);
+                db.ref('settings/activeDoctors').set(filtered);
+            }
+            addLog(`${dr.name} ${newStatus ? 'activated' : 'deactivated'}`);
+        }
+
+        function toggleTVVisibility(drId) {
+            const isVisible = activeDoctorsList.includes(drId);
+            if (isVisible) {
+                const filtered = activeDoctorsList.filter(id => id !== drId);
+                db.ref('settings/activeDoctors').set(filtered);
+                addLog(`${doctors[drId].name} hidden from TV`);
+            } else {
+                const updated = [...activeDoctorsList, drId];
+                db.ref('settings/activeDoctors').set(updated);
+                addLog(`${doctors[drId].name} now visible on TV`);
+            }
+        }
+
+        function addNewDoctor() {
+            const name = document.getElementById('newDrName').value.trim();
+            const username = document.getElementById('newDrUsername').value.trim().toLowerCase();
+            const password = document.getElementById('newDrPassword').value.trim();
+            const specialty = document.getElementById('newDrSpecialty').value.trim();
+
+            if (!name || !username || !password) {
+                alert('Nyamuneka uzuza amazina, username, na password!');
+                return;
+            }
+
+            // Check if username exists
+            for (const id in doctors) {
+                if (doctors[id].username === username) {
+                    alert('Iyi username isanzwe ikoreshwa! Hitamo iyindi.');
+                    return;
+                }
+            }
+
+            const drId = 'dr' + Date.now();
+            db.ref(`doctors/${drId}`).set({
+                name: name,
+                username: username,
+                password: password,
+                specialty: specialty || '',
+                active: true,
+                queue: { p: [], c: null, l: [], m: [] }
+            });
+
+            const updated = [...activeDoctorsList, drId];
+            db.ref('settings/activeDoctors').set(updated);
+
+            // Clear form
+            document.getElementById('newDrName').value = '';
+            document.getElementById('newDrUsername').value = '';
+            document.getElementById('newDrPassword').value = '';
+            document.getElementById('newDrSpecialty').value = '';
+
+            addLog(`New doctor added: ${name} (${username})`);
+            alert(`Umuganga ${name} yashyizweho neza!
+Username: ${username}
+Password: ${password}`);
+        }
+
+        function deleteDoctor(drId) {
+            const dr = doctors[drId];
+            if (confirm(`Urifuza gusiba ${dr.name}? Ibi bizasiba n'amarwayi yose ye!`)) {
+                db.ref(`doctors/${drId}`).remove();
+                const filtered = activeDoctorsList.filter(id => id !== drId);
+                db.ref('settings/activeDoctors').set(filtered);
+                addLog(`Doctor deleted: ${dr.name}`);
+            }
+        }
+
+        function updateReception() {
+            const username = document.getElementById('recUsername').value.trim().toLowerCase();
+            const password = document.getElementById('recPassword').value.trim();
+            const name = document.getElementById('recName').value.trim();
+
+            if (!username || !password) {
+                alert('Username na password birakenewe!');
+                return;
+            }
+
+            db.ref('users/reception').set({ username, password, name: name || 'Reception' });
+            addLog('Reception user updated');
+            alert('Reception yabitswe neza!');
+        }
+
+        function updateAdmin() {
+            const username = document.getElementById('adminUsername').value.trim().toLowerCase();
+            const password = document.getElementById('adminPassword').value.trim();
+            const name = document.getElementById('adminNameInput').value.trim();
+
+            if (!username || !password) {
+                alert('Username na password birakenewe!');
+                return;
+            }
+
+            db.ref('users/admin').set({ username, password, name: name || 'Admin' });
+            addLog('Admin credentials updated');
+            alert('Admin yabitswe neza!');
+        }
+
+        function resetAllQueues() {
+            if (confirm("Urifuza gusiba amakuru yose? Iki ntigishobora gusubirwaho!")) {
+                Object.keys(doctors).forEach(drId => {
+                    db.ref(`doctors/${drId}/queue`).set({ p: [], c: null, l: [], m: [] });
+                });
+                db.ref('settings/counter').set(1);
+                addLog("ALL QUEUES RESET!");
+            }
+        }
+
+        function updateStats() {
+            let totalPatients = 0, activeCount = 0;
+            Object.keys(doctors).forEach(drId => {
+                const dr = doctors[drId];
+                if (dr.active) activeCount++;
+                const queue = dr.queue || {};
+                totalPatients += (queue.p || []).length + (queue.c ? 1 : 0) + (queue.l || []).length + (queue.m || []).length;
+            });
+            document.getElementById('totalPatients').textContent = totalPatients;
+            document.getElementById('activeDoctors').textContent = activeCount;
+            document.getElementById('visibleDoctors').textContent = activeDoctorsList.length;
+            document.getElementById('totalDoctors').textContent = Object.keys(doctors).length;
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('adminLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<br>> [${time}] ${msg}`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ========== INIT ==========
+        if (checkAuth()) {
+            loadDoctors();
+        }
+        addLog("Admin Panel Ready");
+    </script>
+</body>
+</html>
